@@ -12,11 +12,18 @@ Dim capassay As Variant
 Dim digassay As Variant
 Dim metassay As Variant
 Dim pyrassay As Variant
+Dim capDIassay As Variant
+Dim capNDassay As Variant
 
 seqassay = Array("IGHV", "IDH1-2", "CEBPA", "KIT AML", "EPOR")
 
-capassay = Array("CALR", "B CELL", "KIT AML", "T CELL", "FLT3", _
-         "KIT GLV", "KIT D816V", "MPL")
+capassay = Array("CALR", "B CELL", "KIT AML", "T CELL", "FLT3 PCR", _
+         "KIT GLV", "KIT D816V", "MPL", "MSI PCR")
+         
+capDIassay = Array("FLT3 PCR")
+
+capNDassay = Array("CALR", "B CELL", "KIT AML", "T CELL", _
+             "MPL", "KIT GLV", "KIT D816V", "MSI PCR")
         
 digassay = Array("BRAF cfDNA", "EGFR T790", "EPIPRO")
 
@@ -73,6 +80,13 @@ Dim PcrSeqVal As Integer
 
     PcrSeqVal = Application.Sum(Application.CountIfs(Range("G3:G100"), "<>" & "", Range("B3:B100"), seqassay))
     
+    EgeSeqVal = Application.Sum(Application.CountIfs(Range("S3:S100"), "<>" & "", Range("B3:B100"), seqassay))
+    
+    ClnSeqVal = Application.Sum(Application.CountIfs(Range("T3:T100"), "<>" & "", Range("B3:B100"), seqassay))
+    
+    PcrCapVal = Application.Sum(Application.CountIfs(Range("G3:G100"), "<>" & "", Range("B3:B100"), capDIassay))
+    
+    DigCapVal = Application.Sum(Application.CountIfs(Range("H3:H100"), "<>" & "", Range("B3:B100"), capDIassay))
     
     If PcrSeqVal > 0 Then
         
@@ -83,13 +97,47 @@ Dim PcrSeqVal As Integer
     Else
         Sheet17.Shapes("EgeneBox").TextFrame.Characters.Text = 0
     End If
-
+    
+    If EgeSeqVal > 0 Then
+        
+        Sheet17.Shapes("CleanBox").TextFrame.Characters.Text = EgeSeqVal
+        PcrSeqVal = PcrSeqVal - EgeSeqVal
+        Sheet17.Shapes("EgeneBox").TextFrame.Characters.Text = PcrSeqVal
+        
+    Else
+        Sheet17.Shapes("CleanBox").TextFrame.Characters.Text = 0
+    End If
+        
+    If PcrCapVal > 0 Then
+        Sheet17.Shapes("CapDigest").TextFrame.Characters.Text = PcrCapVal
+        CapVal = CapVal - PcrCapVal
+        Sheet17.Shapes("PcrCap").TextFrame.Characters.Text = CapVal
+    Else
+        Sheet17.Shapes("CapDigest").TextFrame.Characters.Text = 0
+    End If
+            
+    If DigCapVal > 0 Then
+        PcrCapVal = PcrCapVal - DigCapVal
+        Sheet17.Shapes("CapDigest").TextFrame.Characters.Text = PcrCapVal
+    Else
+        Sheet17.Shapes("InstrCap").TextFrame.Characters.Text = CapillaryCount
+    End If
 
 '*********************************************************************************************************
 'Instrument column
 '*********************************************************************************************************
     
+    CapillaryCount = InstCap + DigCapVal
+    
     InstSeq = Application.Sum(Application.WorksheetFunction.CountA(Range("U3:U100")))
+    
+    InstCap = Application.Sum(Application.CountIfs(Range("G3:G100"), "<>" & "", Range("B3:B100"), capNDassay))
+    
+    InstDig = Application.Sum(Application.WorksheetFunction.CountA(Range("O3:O100")))
+    
+    InstMet = Application.Sum(Application.WorksheetFunction.CountA(Range("AB3:AB100")))
+    
+    InstPyr = Application.Sum(Application.WorksheetFunction.CountA(Range("AC3:AC100")))
     
     If InstSeq > 0 Then
         Sheet17.Shapes("InstrSeq").TextFrame.Characters.Text = InstSeq
@@ -99,18 +147,90 @@ Dim PcrSeqVal As Integer
         Sheet17.Shapes("InstrSeq").TextFrame.Characters.Text = 0
     End If
     
+    If InstCap > 0 Then
+        Sheet17.Shapes("InstrCap").TextFrame.Characters.Text = CapillaryCount
+        CapVal = CapVal - InstCap
+        Sheet17.Shapes("PcrCap").TextFrame.Characters.Text = CapVal
+    Else
+        Sheet17.Shapes("InstrCap").TextFrame.Characters.Text = 0
+    End If
+    
+    If InstDig > 0 Then
+        Sheet17.Shapes("InstrDig").TextFrame.Characters.Text = InstDigt
+        PcrDigVal = PcrDigVal - InstDig
+        Sheet17.Shapes("PcrDig").TextFrame.Characters.Text = DigVal
+    Else
+        Sheet17.Shapes("InstrDig").TextFrame.Characters.Text = 0
+    End If
+    
+    If InstMet > 0 Then
+        Sheet17.Shapes("InstrMet").TextFrame.Characters.Text = InstMet
+        PcrMetVal = PcrMetVal - InstMet
+        Sheet17.Shapes("PcrMet").TextFrame.Characters.Text = MetVal
+    Else
+        Sheet17.Shapes("InstrMet").TextFrame.Characters.Text = 0
+    End If
+    
+    If InstPyr > 0 Then
+        Sheet17.Shapes("InstrPyr").TextFrame.Characters.Text = InstPyr
+        PcrPyrVal = PcrPyrVal - InstPyr
+        Sheet17.Shapes("PcrPyr").TextFrame.Characters.Text = PyrVal
+    Else
+        Sheet17.Shapes("InstrPyr").TextFrame.Characters.Text = 0
+    End If
+
     
 '*********************************************************************************************************
 'Analysis column
 '*********************************************************************************************************
     AnaSeq = Application.Sum(Application.WorksheetFunction.CountA(Range("W3:W100")))
     
+    AnaCap = Application.Sum(Application.WorksheetFunction.CountA(Range("I3:I100")))
+    
+    AnaDig = Application.Sum(Application.WorksheetFunction.CountA(Range("O3:O100")))
+    
+    AnaMet = Application.Sum(Application.WorksheetFunction.CountA(Range("AB3:AB100")))
+    
+    AnaPyr = Application.Sum(Application.WorksheetFunction.CountA(Range("AC3:AC100")))
+    
     If AnaSeq > 0 Then
-        Sheet17.Shapes("AnalysisSeq").TextFrame.Characters.Text = InstSeq
+        Sheet17.Shapes("AnalysisSeq").TextFrame.Characters.Text = AnaSeq
         InstSeq = InstSeq - AnaSeq
         Sheet17.Shapes("InstrSeq").TextFrame.Characters.Text = InstSeq
     Else
         Sheet17.Shapes("AnalysisSeq").TextFrame.Characters.Text = 0
+    End If
+    
+    If AnaCap > 0 Then
+        Sheet17.Shapes("AnalysisCap").TextFrame.Characters.Text = AnaCap
+        CapillaryCount = CapillaryCount - AnaCap
+        Sheet17.Shapes("InstrCap").TextFrame.Characters.Text = CapillaryCount
+    Else
+        Sheet17.Shapes("AnalysisCap").TextFrame.Characters.Text = 0
+    End If
+    
+    If AnaDig > 0 Then
+        Sheet17.Shapes("AnalysisDig").TextFrame.Characters.Text = AnaDig
+        InstDig = InstDig - AnaDig
+        Sheet17.Shapes("InstrSeq").TextFrame.Characters.Text = InstDig
+    Else
+        Sheet17.Shapes("AnalysisDig").TextFrame.Characters.Text = 0
+    End If
+    
+    If AnaMet > 0 Then
+        Sheet17.Shapes("AnalysisMet").TextFrame.Characters.Text = AnaMet
+        InstMet = InstMet - AnaMet
+        Sheet17.Shapes("InstrMet").TextFrame.Characters.Text = InstMet
+    Else
+        Sheet17.Shapes("AnalysisMet").TextFrame.Characters.Text = 0
+    End If
+    
+    If AnaPyr > 0 Then
+        Sheet17.Shapes("AnalysisPyr").TextFrame.Characters.Text = AnaPyr
+        InstPyr = InstPyr - AnaPyr
+        Sheet17.Shapes("InstrPyr").TextFrame.Characters.Text = InstPyr
+    Else
+        Sheet17.Shapes("AnalysisPyr").TextFrame.Characters.Text = 0
     End If
 
 '*********************************************************************************************************
@@ -725,8 +845,6 @@ Set ddValue18 = rangerdanger18(dropdwn18.Value)
         Range("E:V").EntireColumn.Hidden = True
     End If
 End Sub
-
-
 
 
 
