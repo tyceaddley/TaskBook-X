@@ -2,20 +2,97 @@ Private Sub Worksheet_Change(ByVal Target As Range)
 Dim a As String
 Dim myCells As Range
 Set myCells = Selection
-
 '****************************************************************************************************
 'HEADS UP DISPLAY UPDATER CODE
 '****************************************************************************************************
 'This code is for the top left heads up display and adjusting the values there
-Dim seqassay As Variant
-Dim capassay As Variant
-Dim digassay As Variant
-Dim metassay As Variant
-Dim pyrassay As Variant
-Dim capDIassay As Variant
-Dim capNDassay As Variant
+'****************************************************************************************************
+'Sequencing Assays
+'****************************************************************************************************
+seqNOrt = Array("IDH1-2", "CEBPA", "KIT AML", "EPOR", "IGHV")
 
-seqassay = Array("IGHV", "IDH1-2", "CEBPA", "KIT AML", "EPOR")
+seqRTassay = Array("IGHV")
+
+seqassay = Array("IGHV", "IDH1-2", "CEBPA", "EPOR", "KIT AML")
+
+SeqRTVal = Application.Sum(Application.CountIf(Columns("B"), seqRTassay))
+
+    If SeqRTVal > 0 Then
+        Sheet17.Shapes("SeqRTPCR").TextFrame.Characters.Text = SeqRTVal
+    Else
+        Sheet17.Shapes("SeqRTPCR").TextFrame.Characters.Text = 0
+    End If
+
+sequencePCR = Application.Sum(Application.CountIf(Columns("B"), seqassay))
+rtcount = Application.Sum(Application.CountIfs(Range("P3:P200"), "<>" & "", Range("B3:B200"), seqRTassay))
+
+countminus = sequencePCR - SeqRTVal
+
+    If sequencePCR > 0 Then
+        Sheet17.Shapes("SeqPCR").TextFrame.Characters.Text = countminus
+    Else
+        Sheet17.Shapes("SeqPCR").TextFrame.Characters.Text = 0
+    End If
+    
+    If rtcount > 0 Then
+        Sheet17.Shapes("SeqPCR").TextFrame.Characters.Text = countminus + rtcount
+        SeqRTVal = SeqRTVal - rtcount
+        Sheet17.Shapes("SeqRTPCR").TextFrame.Characters.Text = SeqRTVal
+    Else
+        Sheet17.Shapes("SeqPCR").TextFrame.Characters.Text = countminus
+    End If
+egeneready = countminus + rtcount
+
+regulPCR = Application.Sum(Application.CountIfs(Range("G3:G200"), "<>" & "", Range("B3:B200"), seqassay))
+
+    If regulPCR > 0 Then
+        Sheet17.Shapes("SeqEgene").TextFrame.Characters.Text = regulPCR
+        egeneready = egeneready - regulPCR
+        Sheet17.Shapes("SeqPCR").TextFrame.Characters.Text = egeneready
+    Else
+        Sheet17.Shapes("SeqEgene").TextFrame.Characters.Text = 0
+    End If
+    
+seqPCRready = seqRTinit + SeqNOrtVal
+
+seqegene = Application.Sum(Application.CountIfs(Range("Q3:Q200"), "<>" & "", Range("B3:B200"), seqassay))
+    
+    If seqegene > 0 Then
+        Sheet17.Shapes("SeqClean").TextFrame.Characters.Text = seqegene
+        regulPCR = regulPCR - seqegene
+        Sheet17.Shapes("SeqEgene").TextFrame.Characters.Text = regulPCR
+    Else
+        Sheet17.Shapes("SeqClean").TextFrame.Characters.Text = 0
+    End If
+
+seqCleanup = Application.Sum(Application.CountIfs(Range("S3:S200"), "<>" & "", Range("B3:B200"), seqassay))
+
+    If seqCleanup > 0 Then
+        Sheet17.Shapes("SeqThirty").TextFrame.Characters.Text = seqCleanup
+        seqegene = seqegene - seqCleanup
+        Sheet17.Shapes("SeqClean").TextFrame.Characters.Text = seqegene
+    Else
+        Sheet17.Shapes("SeqThirty").TextFrame.Characters.Text = 0
+    End If
+    
+seqLoad = Application.Sum(Application.CountIfs(Range("U3:U200"), "<>" & "", Range("B3:B200"), seqassay))
+    
+    If seqLoad > 0 Then
+        Sheet17.Shapes("SeqAnalysis").TextFrame.Characters.Text = seqLoad
+        seqCleanup = seqCleanup - seqLoad
+        Sheet17.Shapes("SeqThirty").TextFrame.Characters.Text = seqCleanup
+    Else
+        Sheet17.Shapes("SeqAnalysis").TextFrame.Characters.Text = 0
+    End If
+    
+seqAnalysis = Application.Sum(Application.CountIfs(Range("AC3:AC200"), "<>" & "", Range("B3:B200"), seqassay))
+
+    If seqAnalysis > 0 Then
+        Sheet17.Shapes("SeqAnalysis").TextFrame.Characters.Text = seqLoad - seqAnalysis
+    End If
+'*********************************************************************************************************
+' Speciality column
+'*********************************************************************************************************
 
 capassay = Array("CALR", "B CELL", "KIT AML", "T CELL", "FLT3 PCR", _
          "KIT GLV", "KIT D816V", "MPL", "MSI PCR")
@@ -30,215 +107,45 @@ digassay = Array("BRAF cfDNA", "EGFR T790", "EPIPRO")
 metassay = Array("MGMT", "MLH1")
 
 pyrassay = Array("EGFR Pyro", "KRAS", "NRAS", "BRAF")
-
-
-SeqVal = Application.Sum(Application.CountIf(Columns("B"), seqassay))
-         
-CapVal = Application.Sum(Application.CountIf(Columns("B"), capassay))
-
-DigVal = Application.Sum(Application.CountIf(Columns("B"), digassay))
-        
-MetVal = Application.Sum(Application.CountIf(Columns("B"), metassay))
-         
-PyrVal = Application.Sum(Application.CountIf(Columns("B"), pyrassay))
-
-    If SeqVal > 0 Then
-        Sheet17.Shapes("PcrSeq").TextFrame.Characters.Text = SeqVal
-        
-    Else
-        Sheet17.Shapes("PcrSeq").TextFrame.Characters.Text = 0
-    End If
-    
-    If CapVal > 0 Then
-        Sheet17.Shapes("PcrCap").TextFrame.Characters.Text = CapVal
-    Else
-        Sheet17.Shapes("PcrCap").TextFrame.Characters.Text = 0
-    End If
-    
-    If DigVal > 0 Then
-        Sheet17.Shapes("PcrDig").TextFrame.Characters.Text = DigVal
-    Else
-        Sheet17.Shapes("PcrDig").TextFrame.Characters.Text = 0
-    End If
-    
-    If MetVal > 0 Then
-        Sheet17.Shapes("PcrMet").TextFrame.Characters.Text = MetVal
-    Else
-        Sheet17.Shapes("PcrMet").TextFrame.Characters.Text = 0
-    End If
-    
-    If PyrVal > 0 Then
-        Sheet17.Shapes("PcrPyr").TextFrame.Characters.Text = PyrVal
-    Else
-        Sheet17.Shapes("PcrPyr").TextFrame.Characters.Text = 0
-    End If
-    
-'*********************************************************************************************************
-' Speciality column
-'*********************************************************************************************************
-Dim PcrSeqVal As Integer
-
-    PcrSeqVal = Application.Sum(Application.CountIfs(Range("G3:G100"), "<>" & "", Range("B3:B100"), seqassay))
-    
-    EgeSeqVal = Application.Sum(Application.CountIfs(Range("S3:S100"), "<>" & "", Range("B3:B100"), seqassay))
-    
-    ClnSeqVal = Application.Sum(Application.CountIfs(Range("T3:T100"), "<>" & "", Range("B3:B100"), seqassay))
-    
-    PcrCapVal = Application.Sum(Application.CountIfs(Range("G3:G100"), "<>" & "", Range("B3:B100"), capDIassay))
-    
-    DigCapVal = Application.Sum(Application.CountIfs(Range("H3:H100"), "<>" & "", Range("B3:B100"), capDIassay))
-    
-    If PcrSeqVal > 0 Then
-        
-        Sheet17.Shapes("EgeneBox").TextFrame.Characters.Text = PcrSeqVal
-        SeqVal = SeqVal - PcrSeqVal
-        Sheet17.Shapes("PcrSeq").TextFrame.Characters.Text = SeqVal
-        
-    Else
-        Sheet17.Shapes("EgeneBox").TextFrame.Characters.Text = 0
-    End If
-    
-    If EgeSeqVal > 0 Then
-        
-        Sheet17.Shapes("CleanBox").TextFrame.Characters.Text = EgeSeqVal
-        PcrSeqVal = PcrSeqVal - EgeSeqVal
-        Sheet17.Shapes("EgeneBox").TextFrame.Characters.Text = PcrSeqVal
-        
-    Else
-        Sheet17.Shapes("CleanBox").TextFrame.Characters.Text = 0
-    End If
-        
-    If PcrCapVal > 0 Then
-        Sheet17.Shapes("CapDigest").TextFrame.Characters.Text = PcrCapVal
-        CapVal = CapVal - PcrCapVal
-        Sheet17.Shapes("PcrCap").TextFrame.Characters.Text = CapVal
-    Else
-        Sheet17.Shapes("CapDigest").TextFrame.Characters.Text = 0
-    End If
-            
-    If DigCapVal > 0 Then
-        PcrCapVal = PcrCapVal - DigCapVal
-        Sheet17.Shapes("CapDigest").TextFrame.Characters.Text = PcrCapVal
-    Else
-        Sheet17.Shapes("InstrCap").TextFrame.Characters.Text = CapillaryCount
-    End If
-
 '*********************************************************************************************************
 'Instrument column
 '*********************************************************************************************************
-    
-    CapillaryCount = InstCap + DigCapVal
-    
-    InstSeq = Application.Sum(Application.WorksheetFunction.CountA(Range("U3:U100")))
-    
-    InstCap = Application.Sum(Application.CountIfs(Range("G3:G100"), "<>" & "", Range("B3:B100"), capNDassay))
-    
-    InstDig = Application.Sum(Application.WorksheetFunction.CountA(Range("O3:O100")))
-    
-    InstMet = Application.Sum(Application.WorksheetFunction.CountA(Range("AB3:AB100")))
-    
-    InstPyr = Application.Sum(Application.WorksheetFunction.CountA(Range("AC3:AC100")))
-    
-    If InstSeq > 0 Then
-        Sheet17.Shapes("InstrSeq").TextFrame.Characters.Text = InstSeq
-        PcrSeqVal = PcrSeqVal - InstSeq
-        Sheet17.Shapes("PcrSeq").TextFrame.Characters.Text = SeqVal
-    Else
-        Sheet17.Shapes("InstrSeq").TextFrame.Characters.Text = 0
-    End If
-    
-    If InstCap > 0 Then
-        Sheet17.Shapes("InstrCap").TextFrame.Characters.Text = CapillaryCount
-        CapVal = CapVal - InstCap
-        Sheet17.Shapes("PcrCap").TextFrame.Characters.Text = CapVal
-    Else
-        Sheet17.Shapes("InstrCap").TextFrame.Characters.Text = 0
-    End If
-    
-    If InstDig > 0 Then
-        Sheet17.Shapes("InstrDig").TextFrame.Characters.Text = InstDigt
-        PcrDigVal = PcrDigVal - InstDig
-        Sheet17.Shapes("PcrDig").TextFrame.Characters.Text = DigVal
-    Else
-        Sheet17.Shapes("InstrDig").TextFrame.Characters.Text = 0
-    End If
-    
-    If InstMet > 0 Then
-        Sheet17.Shapes("InstrMet").TextFrame.Characters.Text = InstMet
-        PcrMetVal = PcrMetVal - InstMet
-        Sheet17.Shapes("PcrMet").TextFrame.Characters.Text = MetVal
-    Else
-        Sheet17.Shapes("InstrMet").TextFrame.Characters.Text = 0
-    End If
-    
-    If InstPyr > 0 Then
-        Sheet17.Shapes("InstrPyr").TextFrame.Characters.Text = InstPyr
-        PcrPyrVal = PcrPyrVal - InstPyr
-        Sheet17.Shapes("PcrPyr").TextFrame.Characters.Text = PyrVal
-    Else
-        Sheet17.Shapes("InstrPyr").TextFrame.Characters.Text = 0
-    End If
 
-    
 '*********************************************************************************************************
 'Analysis column
 '*********************************************************************************************************
-    AnaSeq = Application.Sum(Application.WorksheetFunction.CountA(Range("W3:W100")))
-    
-    AnaCap = Application.Sum(Application.WorksheetFunction.CountA(Range("I3:I100")))
-    
-    AnaDig = Application.Sum(Application.WorksheetFunction.CountA(Range("O3:O100")))
-    
-    AnaMet = Application.Sum(Application.WorksheetFunction.CountA(Range("AB3:AB100")))
-    
-    AnaPyr = Application.Sum(Application.WorksheetFunction.CountA(Range("AC3:AC100")))
-    
-    If AnaSeq > 0 Then
-        Sheet17.Shapes("AnalysisSeq").TextFrame.Characters.Text = AnaSeq
-        InstSeq = InstSeq - AnaSeq
-        Sheet17.Shapes("InstrSeq").TextFrame.Characters.Text = InstSeq
-    Else
-        Sheet17.Shapes("AnalysisSeq").TextFrame.Characters.Text = 0
-    End If
-    
-    If AnaCap > 0 Then
-        Sheet17.Shapes("AnalysisCap").TextFrame.Characters.Text = AnaCap
-        CapillaryCount = CapillaryCount - AnaCap
-        Sheet17.Shapes("InstrCap").TextFrame.Characters.Text = CapillaryCount
-    Else
-        Sheet17.Shapes("AnalysisCap").TextFrame.Characters.Text = 0
-    End If
-    
-    If AnaDig > 0 Then
-        Sheet17.Shapes("AnalysisDig").TextFrame.Characters.Text = AnaDig
-        InstDig = InstDig - AnaDig
-        Sheet17.Shapes("InstrSeq").TextFrame.Characters.Text = InstDig
-    Else
-        Sheet17.Shapes("AnalysisDig").TextFrame.Characters.Text = 0
-    End If
-    
-    If AnaMet > 0 Then
-        Sheet17.Shapes("AnalysisMet").TextFrame.Characters.Text = AnaMet
-        InstMet = InstMet - AnaMet
-        Sheet17.Shapes("InstrMet").TextFrame.Characters.Text = InstMet
-    Else
-        Sheet17.Shapes("AnalysisMet").TextFrame.Characters.Text = 0
-    End If
-    
-    If AnaPyr > 0 Then
-        Sheet17.Shapes("AnalysisPyr").TextFrame.Characters.Text = AnaPyr
-        InstPyr = InstPyr - AnaPyr
-        Sheet17.Shapes("InstrPyr").TextFrame.Characters.Text = InstPyr
-    Else
-        Sheet17.Shapes("AnalysisPyr").TextFrame.Characters.Text = 0
-    End If
 
 '*********************************************************************************************************
 'Clear Analysis column
 '*********************************************************************************************************
 
+'Set the active cell address for copying of cells to finished and DT tracking
+a = ActiveCell.Address(0, 0)
 
-
+    On Error GoTo HANDLER
+    'Creating a datetime tracking process for the taskbook,
+    'this will set a column on the same row 52-54 cells away as a timestamp of when the cell was edited.
+    'Column=2 target is for assay entered
+    If Target.Column = 2 And Target.Value <> "" Then
+        Application.EnableEvents = False
+        Target.Offset(0, 2) = Format(Now(), "mm/dd/yyyy hh:mm:ss")
+        Target.Offset(0, 54) = Format(Now(), "mm/dd/yyyy hh:mm:ss")
+        Target.Offset(0, 52) = Target.Value
+        Application.EnableEvents = True
+        
+    'Column=3 target is for the run number entered, should be a run name not time value
+    ElseIf Target.Column = 3 And Target.Value <> "" Then
+        Application.EnableEvents = False
+        Target.Offset(0, 52) = Target.Value
+        Application.EnableEvents = True
+        
+    'All other columns excluding 2 & 3 will be a datetime entered offset by 52 cells
+    ElseIf Target.Column <> 4 And Target.Value <> "" Then
+        Application.EnableEvents = False
+        Target.Offset(0, 52) = Format(Now(), "mm/dd/yyyy hh:mm:ss")
+        Application.EnableEvents = True
+    End If
+    
 'Set the active cell address for copying of cells to Completed and Completed DT worksheet tracking
 a = ActiveCell.Address(0, 0)
 
