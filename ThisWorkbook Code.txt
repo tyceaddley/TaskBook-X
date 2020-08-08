@@ -1,0 +1,661 @@
+Private Sub Workbook_Open()
+        Worksheets("Current Tasks").Activate
+        Sheet17.Range("A1").Select
+        If ActiveSheet.AutoFilterMode Then
+            ActiveSheet.AutoFilter.ShowAllData
+        End If
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        Range("A3:ZZ300").Columns.Hidden = False
+        Range("D:AF").EntireColumn.Hidden = True
+        
+        Sheets("Current Tasks").Shapes("Drop Down 10").ControlFormat.ListIndex = 1
+        Sheets("Current Tasks").Shapes("Drop Down 15").ControlFormat.ListIndex = 1
+        Sheets("Current Tasks").Shapes("Drop Down 18").ControlFormat.ListIndex = 1
+End Sub
+
+Sub StartTimer()
+
+Const idleTime = 300 'seconds
+Dim Start
+    Start = Timer
+    Do While Timer < Start + idleTime
+        DoEvents
+    Loop
+    Application.DisplayAlerts = False
+    ActiveWorkbook.Close SaveChanges:=True
+    Application.DisplayAlerts = True
+End Sub
+Private Sub Worksheet_Change(ByVal Target As Range)
+    
+    Application.ScreenUpdating = False
+    
+    Set rng = Range("AF3:AF250")
+    r = ActiveCell.Row 'set the row number
+    fRow = Sheets("Completed").Range("I1000000").End(xlUp).Row + 1
+        
+    On Error GoTo HANDLER
+    
+    If Target.Column = 2 And Target.Value <> "" Then
+        Application.EnableEvents = False
+        Target.Offset(0, 2) = Format(Now(), "mm/dd/yyyy hh:mm:ss")
+        Application.EnableEvents = True
+    End If
+    
+HANDLER:
+
+    For Each cell In rng
+        If cell.Text <> "" Then
+            Sheets("Sheet2").Cells(r, 33) = txtIntials
+            
+            Sheets("Sheet2").Range(Cells(r, 1), Cells(r, 35)).Select
+            Selection.Copy
+            Sheets("Completed").Activate
+            Range(Cells(fRow, 1), Cells(fRow, 35)).Select
+            ActiveSheet.Paste
+            Cells(fRow, 33) = txtIntials
+            Sheets("Sheet2").Activate
+            Rows.Cells(r, 1).EntireRow.Delete
+        
+            Unload Me
+            
+        End If
+    Next
+Application.ScreenUpdating = True
+End Sub
+
+Sub TestSelectionsAndFiltering()
+Dim dropdwn As DropDown
+Set dropdwn15 = ActiveSheet.DropDowns("Drop Down 15")
+Set dropdwn10 = ActiveSheet.DropDowns("Drop Down 10")
+Set rangerdanger15 = Worksheets("Drop Down").Range(dropdwn15.ListFillRange)
+Set rangerdanger10 = Worksheets("Drop Down").Range(dropdwn10.ListFillRange)
+Set ddValue15 = rangerdanger15(dropdwn15.Value)
+Set ddValue10 = rangerdanger10(dropdwn10.Value)
+'*********************************************************************************************************
+'Template for new test addition---------------------------------------------------------------------------
+'1. Copy from ElseIf to the End If statement and remove ' from start of line
+'2. Fill in --TEST_NAME-- with Assay name in all caps from line 1
+'3. Replace --TEST_NAME-- in line 7 with Assay name, all caps
+'4. Line 8 replace --COLUMN_NAME-- and enter individual columns outside of a range that need to be hidden
+'5. Line 9 replace --COLUMN_NAME_RANGE-- with range of columns that need to be hidden for test
+'6. Paste at end of document above End If statement
+
+'    ElseIf ddValue10 = "--TEST_NAME--" Then
+'        Columns("A:AG").Select
+'        Selection.EntireColumn.Hidden = False
+'        Range("A1").Select
+        
+'        ActiveSheet.Range("$A$2:$AG$250").AutoFilter Field:=2
+'        ActiveSheet.Range("$A$2:$AG$250").AutoFilter Field:=2, Criteria1:="--TEST_NAME--"
+'        Columns("--COLUMN_NAME--").Hidden = True
+'        Range("--COLUMN_NAME_RANGE--").EntireColumn.Hidden = True
+        
+'            If ddValue15 = "NOTES" Then
+'                Range("D:AF").EntireColumn.Hidden = True
+        
+'            ElseIf ddValue15 = "REPEATS" Then
+'                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+'            ElseIf ddValue15 = "ALL" Then
+'                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+'            End If
+'*********************************************************************************************************
+            
+    'Selection based on first dropdown box, which chooses the test
+    If ddValue10 = "ALL" Then
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        Range("A3:ZZ300").Columns.Hidden = False
+        Range("D:AF").EntireColumn.Hidden = True
+            
+            'Second selection box which chooses a sub catAFory
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+            
+    'Choose which test from table containing names of tests
+    ElseIf ddValue10 = "B CELL" Then
+        'Selects all columns from date to notes
+        Columns("A:AG").Select
+        'Removes any hidden formatting from selected date to notes columns
+        Selection.EntireColumn.Hidden = False
+        'Selects cell A1, which has a numerical indicator for which table item is chosen
+        Range("A1").Select
+        
+        'Chooses a filter selection of none to clear any previous filters
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        'Creates a filter for the desired test, must be changed for each If statement added
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="B CELL"
+        'The next two lines choose which columns to selectively hide dependent on if they pertain
+        'to the selected test or not
+        Columns("H").Hidden = True
+        Range("K:AB").EntireColumn.Hidden = True
+            'The second drop down which has All, Repeats, and Notes
+            If ddValue15 = "NOTES" Then
+            'Hides the columns between Run # and notes for a more compact view
+                Range("D:AF").EntireColumn.Hidden = True
+            'Chooses filtering for repeat patients, or runs only
+            ElseIf ddValue15 = "REPEATS" Then
+            'The filter for column AF is set to Yes, which indicates if repeat or not,
+            'if no is entered the filter hides the entire row from view
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+            'All is an indication selection for all data relevant to the selected test contained
+            'in the taskbook
+            ElseIf ddValue15 = "ALL" Then
+            'Returns all information from filtering relevant to selected test
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+            End If
+            
+    ElseIf ddValue10 = "BRAF" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="BRAF"
+        Range("H:Z").EntireColumn.Hidden = True
+        Range("AA:AC").EntireColumn.Hidden = False
+        Columns("E").Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+            
+    ElseIf ddValue10 = "BRAF cfDNA" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="BRAF cfDNA"
+        Range("H:AB").EntireColumn.Hidden = True
+        Columns("K:N").Hidden = False
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+            
+    ElseIf ddValue10 = "CALR" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="CALR"
+        Columns("H").Hidden = True
+        Range("K:AB").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+
+    ElseIf ddValue10 = "CEBPA" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="CEBPA"
+        Range("H:P,W:AB").EntireColumn.Hidden = True
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+    
+    ElseIf ddValue10 = "EGFR Pyro" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="EGFR"
+        Range("H:Z").EntireColumn.Hidden = True
+        Range("AA:AC").EntireColumn.Hidden = False
+        Columns("E").Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+
+    ElseIf ddValue10 = "EGFR T790" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="EGFR T790"
+        Range("H:AB").EntireColumn.Hidden = True
+        Columns("K:N").Hidden = False
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+            
+    ElseIf ddValue10 = "EPIPRO" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="EPIPRO"
+        Range("H:AB").EntireColumn.Hidden = True
+        Columns("K:L").Hidden = False
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+            
+    ElseIf ddValue10 = "EPOR" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="EPOR"
+        Range("H:P,W:AB").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+            
+    ElseIf ddValue10 = "FLT3 PCR" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="FLT3 PCR"
+        Range("K:AB").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+            
+    ElseIf ddValue10 = "IDH1-2" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="IDH1-2"
+        Range("H:P,W:AB").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+        
+    ElseIf ddValue10 = "IGHV" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="IGHV"
+        Range("H:N, W:AB").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+            
+     ElseIf ddValue10 = "KIT AML" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="KIT AML"
+        Range("K:P,W:AB").EntireColumn.Hidden = True
+        Columns("H").Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+            
+    ElseIf ddValue10 = "KIT D816V" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="KIT D816V"
+        Columns("H").Hidden = True
+        Range("K:AB").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+            
+    ElseIf ddValue10 = "KRAS" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="KRAS"
+        Range("H:Z").EntireColumn.Hidden = True
+        Range("AA:AC").EntireColumn.Hidden = False
+        Columns("E").Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+    
+    ElseIf ddValue10 = "MGMT" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="MGMT"
+        Columns("AA:AB").Hidden = True
+        Range("H:V").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+        
+    ElseIf ddValue10 = "MLH1" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="MLH1"
+        Columns("AA:AB").Hidden = True
+        Columns("Y").Hidden = True
+        Range("H:V").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+        
+    ElseIf ddValue10 = "MPL" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="MPL"
+        Columns("H").Hidden = True
+        Range("K:AB").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+        
+    ElseIf ddValue10 = "MSI PCR" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="MSI PCR"
+        Columns("H").Hidden = True
+        Range("K:AB").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+    
+    ElseIf ddValue10 = "NRAS" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="NRAS"
+        Range("H:Z").EntireColumn.Hidden = True
+        Range("AA:AC").EntireColumn.Hidden = False
+        Columns("E").Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+    
+    ElseIf ddValue10 = "SEQ CONFIRM" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="SEQ CONFIRM"
+        Range("H:Q,W:AB").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+    
+    ElseIf ddValue10 = "T CELL" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:="T CELL"
+        Columns("H").Hidden = True
+        Range("K:AB").EntireColumn.Hidden = True
+        
+            If ddValue15 = "NOTES" Then
+                Range("D:AF").EntireColumn.Hidden = True
+        
+            ElseIf ddValue15 = "REPEATS" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31, Criteria1:="Yes"
+                
+            ElseIf ddValue15 = "ALL" Then
+                ActiveSheet.Range("$AG$44").AutoFilter Field:=31
+                
+            End If
+    End If
+End Sub
+Sub MethodologyFiltering()
+
+Dim dropdwn As DropDown
+
+Set dropdwn18 = ActiveSheet.DropDowns("Drop Down 18")
+Set rangerdanger18 = Worksheets("Drop Down").Range(dropdwn18.ListFillRange)
+Set ddValue18 = rangerdanger18(dropdwn18.Value)
+
+    'Creates a selection option for columns relevant to sequencing loading and other test methodologies.
+    If ddValue18 = "NONE" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2
+        
+        Range("D:AF").EntireColumn.Hidden = True
+        
+    ElseIf ddValue18 = "SEQUENCING" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+    'Select which tests will be in the methodology listed above as variable ddValue18
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:=Array("IDH1-2", "CEBPA", "IGHV", "EPOR", "KIT AML", "SEQ CONFIRM"), Operator:=xlFilterValues
+        Range("H:N").EntireColumn.Hidden = True
+        Range("W:AB").EntireColumn.Hidden = True
+        
+    ElseIf ddValue18 = "CAPILLARY" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:=Array("CALR", "MSI PCR", "B CELL", "T CELL", "KIT AML", "MPL", "FLT3 PCR", "KIT D816V", "KIT GLV"), Operator:=xlFilterValues
+        Range("K:AB").EntireColumn.Hidden = True
+        
+    ElseIf ddValue18 = "DIGITAL DROPLET" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:=Array("BRAF cfDNA", "EGFR T790"), Operator:=xlFilterValues
+        Range("H:J").EntireColumn.Hidden = True
+        Range("O:AB").EntireColumn.Hidden = True
+        
+    ElseIf ddValue18 = "METHYLATION" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:=Array("EPIPRO", "MGMT", "MLH1"), Operator:=xlFilterValues
+        Range("H:V").EntireColumn.Hidden = True
+        Columns("AA:AB").Hidden = True
+        
+    ElseIf ddValue18 = "PYROSEQUENCING" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        ActiveSheet.Range("A" & Rows.Count).End(xlUp).AutoFilter Field:=2, Criteria1:=Array("EGFR Pyro", "KRAS", "NRAS", "BRAF"), Operator:=xlFilterValues
+        Range("H:Z").EntireColumn.Hidden = True
+        
+    ElseIf ddValue18 = "UNFILTERED" Then
+        Columns("A:AG").Select
+        Selection.EntireColumn.Hidden = False
+        Range("A1").Select
+        If ActiveSheet.AutoFilterMode Then
+            ActiveSheet.AutoFilter.ShowAllData
+        End If
+        
+    End If
+End Sub
